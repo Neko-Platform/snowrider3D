@@ -102,6 +102,7 @@ window.PusherGameControl.control.setSpeed(1.5);
 | `resume-game` | `{}` | Resumes the game |
 | `restart-game` | `{}` | Restarts the game |
 | `set-speed` | `{speed: 1.5}` | Sets game speed (0.5-5.0) |
+| `force-crash` | `{}` | Forces 'D' key press for 9 seconds |
 | `game-command` | `{command: "pause", value: null}` | Generic command |
 
 ## Troubleshooting

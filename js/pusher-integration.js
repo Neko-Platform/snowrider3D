@@ -82,6 +82,42 @@
                 }
             }
             return false;
+        },
+
+        forceCrash: function() {
+            console.log('[Pusher] Force crash initiated - holding D key for 9 seconds');
+            
+            // Create and dispatch keydown event for 'D' key
+            const keyDownEvent = new KeyboardEvent('keydown', {
+                key: 'd',
+                code: 'KeyD',
+                keyCode: 68,
+                which: 68,
+                bubbles: true,
+                cancelable: true
+            });
+            
+            // Start holding the D key
+            document.dispatchEvent(keyDownEvent);
+            window.dispatchEvent(keyDownEvent);
+            
+            // Hold for 9 seconds then release
+            setTimeout(() => {
+                const keyUpEvent = new KeyboardEvent('keyup', {
+                    key: 'd',
+                    code: 'KeyD',
+                    keyCode: 68,
+                    which: 68,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                document.dispatchEvent(keyUpEvent);
+                window.dispatchEvent(keyUpEvent);
+                console.log('[Pusher] Force crash completed - D key released');
+            }, 9000);
+            
+            return true;
         }
     };
 
@@ -162,6 +198,12 @@
                 }
             });
 
+            // Force crash event
+            this.channel.bind('force-crash', (data) => {
+                console.log('[Pusher] Received force-crash event:', data);
+                GameControl.forceCrash();
+            });
+
             // Generic command event for extensibility
             this.channel.bind('game-command', (data) => {
                 console.log('[Pusher] Received game-command event:', data);
@@ -188,6 +230,9 @@
                     if (typeof data.value !== 'undefined') {
                         GameControl.setSpeed(data.value);
                     }
+                    break;
+                case 'forceCrash':
+                    GameControl.forceCrash();
                     break;
                 default:
                     console.warn('[Pusher] Unknown command:', data.command);

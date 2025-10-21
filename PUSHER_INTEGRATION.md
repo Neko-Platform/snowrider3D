@@ -44,12 +44,19 @@ pusher.trigger('game-control', 'set-speed', {
 });
 ```
 
-### 5. Generic Game Commands
+### 5. Force Crash
+Send a `force-crash` event to force the 'D' key to be held for 9 seconds.
+
+```javascript
+pusher.trigger('game-control', 'force-crash', {});
+```
+
+### 6. Generic Game Commands
 Send a `game-command` event for generic commands.
 
 ```javascript
 pusher.trigger('game-control', 'game-command', {
-  command: 'pause',  // or 'resume', 'restart', 'setSpeed'
+  command: 'pause',  // or 'resume', 'restart', 'setSpeed', 'forceCrash'
   value: 1.0         // optional, used for commands like setSpeed
 });
 ```
