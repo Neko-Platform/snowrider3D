@@ -11,9 +11,13 @@
     <meta property="og:image" content="snow-rider-3d.png" />
     <script src="TemplateData/UnityProgress.js"></script>
     <script src="Build/UnityLoader.js"></script>
+    <!-- Pusher JS SDK -->
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
     <script>
         var gameInstance = UnityLoader.instantiate("gameContainer", "Build/SnowRider3D-gd-1.json", { onProgress: UnityProgress, Module: { onRuntimeInitialized: function () { UnityProgress(gameInstance, "complete") } } });
     </script>
+    <!-- Pusher Integration for Remote Game Control -->
+    <script src="js/pusher-integration.js"></script>
 </head>
 
 <body style="overflow:hidden; margin:0; padding:0;">

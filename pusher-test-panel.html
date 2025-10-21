@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusher Game Control Test Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #555;
+            font-size: 18px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:active {
+            background-color: #3d8b40;
+        }
+        .danger {
+            background-color: #f44336;
+        }
+        .danger:hover {
+            background-color: #da190b;
+        }
+        .warning {
+            background-color: #ff9800;
+        }
+        .warning:hover {
+            background-color: #e68900;
+        }
+        .info {
+            background-color: #2196F3;
+        }
+        .info:hover {
+            background-color: #0b7dda;
+        }
+        #status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group label {
+            display: inline-block;
+            width: 100px;
+            font-weight: bold;
+        }
+        .input-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .code {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Snow Rider 3D - Remote Control Panel</h1>
+        
+        <div id="status" style="display:none;">
+            <strong>Status:</strong> <span id="statusText">Initializing...</span>
+        </div>
+
+        <div class="note">
+            <strong>⚠️ Note:</strong> This test panel uses Pusher to send events to control the game remotely. 
+            Make sure the game is running in another browser tab/window.
+        </div>
+
+        <div class="section">
+            <h2>📡 Connection Info</h2>
+            <p><strong>Cluster:</strong> eu</p>
+            <p><strong>Channel:</strong> game-control</p>
+            <p><strong>Key:</strong> 59418388ba581a7af37d</p>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Game Controls</h2>
+            <button onclick="sendEvent('pause-game')" class="warning">⏸️ Pause Game</button>
+            <button onclick="sendEvent('resume-game')" class="info">▶️ Resume Game</button>
+            <button onclick="sendEvent('restart-game')" class="danger">🔄 Restart Game</button>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Speed Control</h2>
+            <div class="input-group">
+                <label for="speedInput">Speed:</label>
+                <input type="number" id="speedInput" value="1.0" step="0.1" min="0.1" max="5.0">
+                <button onclick="setSpeed()">Set Speed</button>
+            </div>
+            <p style="font-size: 12px; color: #666;">
+                Speed values: 0.5 = half speed, 1.0 = normal, 2.0 = double speed
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Custom Command</h2>
+            <div class="input-group">
+                <label for="commandInput">Command:</label>
+                <input type="text" id="commandInput" placeholder="pause" value="pause">
+            </div>
+            <div class="input-group">
+                <label for="valueInput">Value:</label>
+                <input type="text" id="valueInput" placeholder="optional">
+            </div>
+            <button onclick="sendCustomCommand()">Send Custom Command</button>
+        </div>
+
+        <div class="section">
+            <h2>📝 Event Log</h2>
+            <div id="eventLog" class="code" style="height: 200px; overflow-y: auto;">
+                Waiting for events...
+            </div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+
+        <div class="section">
+            <h2>💻 Quick Test Code</h2>
+            <p>You can also test from browser console on the game page:</p>
+            <div class="code">
+// Check status<br>
+window.PusherGameControl.getStatus();<br>
+<br>
+// Manual control<br>
+window.PusherGameControl.control.pause();<br>
+window.PusherGameControl.control.resume();
+            </div>
+        </div>
+    </div>
+
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+    <script>
+        // Pusher configuration
+        const pusher = new Pusher('59418388ba581a7af37d', {
+            cluster: 'eu',
+            encrypted: true
+        });
+
+        const channel = pusher.subscribe('game-control');
+        let eventCount = 0;
+
+        // Connection status
+        pusher.connection.bind('connected', () => {
+            updateStatus('Connected to Pusher ✓', 'success');
+            logEvent('System', 'Connected to Pusher');
+        });
+
+        pusher.connection.bind('disconnected', () => {
+            updateStatus('Disconnected from Pusher ✗', 'error');
+            logEvent('System', 'Disconnected from Pusher');
+        });
+
+        pusher.connection.bind('error', (err) => {
+            updateStatus('Connection Error: ' + err.message, 'error');
+            logEvent('System', 'Connection error: ' + JSON.stringify(err));
+        });
+
+        // Listen to all events for logging
+        channel.bind_global((eventName, data) => {
+            logEvent('Received', eventName + ': ' + JSON.stringify(data));
+        });
+
+        function updateStatus(text, type) {
+            const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+            statusDiv.style.display = 'block';
+            statusText.textContent = text;
+            
+            if (type === 'success') {
+                statusDiv.style.background = '#d4edda';
+                statusDiv.style.borderColor = '#28a745';
+            } else if (type === 'error') {
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.borderColor = '#dc3545';
+            } else {
+                statusDiv.style.background = '#e3f2fd';
+                statusDiv.style.borderColor = '#2196F3';
+            }
+        }
+
+        function logEvent(type, message) {
+            eventCount++;
+            const log = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] [${type}] ${message}\n`;
+            
+            if (log.textContent === 'Waiting for events...') {
+                log.textContent = '';
+            }
+            
+            log.textContent += entry;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function sendEvent(eventName, data = {}) {
+            try {
+                // Trigger the event
+                pusher.trigger('game-control', eventName, data);
+                logEvent('Sent', eventName + ': ' + JSON.stringify(data));
+                updateStatus('Event sent: ' + eventName, 'success');
+            } catch (e) {
+                // Client-side triggering requires auth, so we'll just log locally
+                // In real implementation, this would go through a server
+                logEvent('Local', 'Would send ' + eventName + ': ' + JSON.stringify(data));
+                updateStatus('⚠️ Client cannot trigger events. Use server-side API or Pusher Debug Console.', 'error');
+            }
+        }
+
+        function setSpeed() {
+            const speed = parseFloat(document.getElementById('speedInput').value);
+            sendEvent('set-speed', { speed: speed });
+        }
+
+        function sendCustomCommand() {
+            const command = document.getElementById('commandInput').value;
+            const value = document.getElementById('valueInput').value;
+            
+            const data = { command: command };
+            if (value) {
+                data.value = value;
+            }
+            
+            sendEvent('game-command', data);
+        }
+
+        function clearLog() {
+            document.getElementById('eventLog').textContent = 'Log cleared...';
+            eventCount = 0;
+        }
+
+        // Initialize
+        updateStatus('Connecting to Pusher...', 'info');
+        logEvent('System', 'Control panel initialized');
+    </script>
+</body>
+</html>
